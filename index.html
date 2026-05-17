@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Тренажер: Экономика Pro</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="./tele-secure.js" defer></script>
+    <style>
+        :root {
+            --bg-color: #0f172a; 
+            --card-bg: #1e293b; 
+            --accent-blue: #2563eb; 
+            --soft-green: #16a34a; 
+            --soft-red: #dc2626; 
+            --text-main: #f1f5f9; 
+            --text-muted: #94a3b8; 
+            --border-color: #334155; 
+            --border-radius: 14px;
+            --transition: all 0.2s ease-in-out;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, sans-serif; 
+            background: var(--bg-color); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .creator-link {
+            text-align: center;
+            margin: 10px 0 15px 0;
+            text-decoration: none;
+            display: block;
+            transition: var(--transition);
+        }
+        .creator-link:active { transform: scale(0.95); }
+        .creator-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 20px;
+            color: var(--accent-blue);
+            font-size: 0.85em;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .card { 
+            background: var(--card-bg); 
+            max-width: 500px; 
+            margin: 0 auto; 
+            padding: 20px; 
+            border-radius: var(--border-radius); 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4); 
+            border: 1px solid var(--border-color);
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        h1 { font-size: 1.5em; text-align: center; margin: 0 0 15px 0; color: #fff; }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .mini-setting {
+            background: #131d31;
+            padding: 10px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .mini-setting span { font-size: 0.75em; color: var(--text-muted); text-transform: uppercase; }
+        .mini-setting input, .mini-setting select {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1em;
+            font-weight: 600;
+            width: 100%;
+            outline: none;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .btn { 
+            padding: 14px; 
+            border: none; 
+            border-radius: 12px; 
+            font-size: 0.95em; 
+            cursor: pointer; 
+            font-weight: 600; 
+            transition: var(--transition); 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-full { grid-column: span 2; }
+        .btn-primary { background: var(--accent-blue); color: #fff; }
+        .btn-secondary { background: #334155; color: #cbd5e1; }
+        .btn-amber { background: #d97706; color: #fff; }
+        .btn-sky { background: #0284c7; color: #fff; }
+
+        .list-container { margin-top: 15px; }
+        .item-box { 
+            background: #131d31; 
+            padding: 15px; 
+            border-radius: 12px; 
+            margin-bottom: 10px; 
+            border: 1px solid var(--border-color);
+        }
+        
+        .timer { font-size: 1.5em; font-weight: 800; color: #38bdf8; text-align: center; }
+        .hidden { display: none; }
+        
+        .sticky-bottom {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+        }
+    </style>
+</head>
+<body>
+
+<a href="https://t.me/nurislombekm" target="_blank" class="creator-link">
+    <div class="creator-badge">РАЗРАБОТКА: @NURISLOMBEKM</div>
+</a>
+
+<div id="loading-screen" class="card"><div style="text-align: center;">Загрузка...</div></div>
+
+<div id="start-screen" class="card hidden">
+    <h1>📊 Экономика Pro</h1>
+    <div id="user-badge" style="font-size:0.85em; text-align:center; margin-bottom:15px; color:var(--text-muted);"></div>
+
+    <div class="settings-grid">
+        <div class="mini-setting"><span>Время</span><input type="number" id="cfg-time" value="1200"></div>
+        <div class="mini-setting"><span>Вопросов</span><input type="number" id="cfg-count" value="20"></div>
+        <div class="mini-setting" style="grid-column: span 2;">
+            <span>Диапазон (от - до)</span>
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="cfg-start" value="1" style="width: 50%;">
+                <input type="number" id="cfg-end" value="300" style="width: 50%;">
+            </div>
+        </div>
+        <div class="mini-setting" style="grid-column: span 2;">
+            <span>Порядок</span>
+            <select id="cfg-order"><option value="random">Случайный</option><option value="list">По порядку</option></select>
+        </div>
+    </div>
+
+    <div class="menu-grid">
+        <button class="btn btn-primary btn-full" onclick="initTest(true)">⚡ Начать экзамен</button>
+        <button class="btn btn-secondary" onclick="initTest(false)">🧩 Тренировка</button>
+        <button class="btn btn-sky" onclick="initStudy()">📖 База</button>
+        <button class="btn btn-amber" onclick="showFavorites()">⭐ Избранное</button>
+        <button class="btn btn-secondary btn-full" onclick="showHistory()">📜 Моя История</button>
+    </div>
+</div>
+
+<div id="test-screen" class="card hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <div id="timer-display" class="timer">00:00</div>
+        <button class="btn btn-secondary" onclick="confirmFinish()" style="padding:8px 15px;">Закончить</button>
+    </div>
+    <div id="q-text" style="font-weight:600; margin-bottom:15px; min-height:60px;"></div>
+    <ul id="q-options" style="list-style:none; padding:0;"></ul>
+    <button id="accept-btn" class="btn btn-primary hidden" onclick="acceptAnswer()" style="width:100%; margin-top:10px;">Подтвердить ответ</button>
+    
+    <div style="display:flex; gap:10px; margin-top:15px;">
+        <button class="btn btn-secondary" onclick="prevQuestion()">←</button>
+        <button id="next-btn" class="btn btn-primary hidden" style="flex-grow:1;" onclick="nextQuestion()">Далее</button>
+        <button id="skip-btn" class="btn btn-secondary" style="flex-grow:1;" onclick="nextQuestion()">Пропустить</button>
+    </div>
+</div>
+
+<div id="list-screen" class="card hidden" style="max-width:600px;">
+    <h1 id="list-title">Раздел</h1>
+    <div id="search-area" class="hidden">
+        <input type="text" id="search-box" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border-color); background:#131d31; color:#fff; box-sizing:border-box;" placeholder="Поиск..." oninput="filterList()">
+    </div>
+    <div id="list-content" class="list-container"></div>
+    <div style="height:80px;"></div>
+    <div class="sticky-bottom">
+        <button class="btn btn-primary" onclick="backToMenu()" style="width:100%;">В ГЛАВНОЕ МЕНЮ</button>
+    </div>
+</div>
+
+<div id="result-screen" class="card hidden">
+    <h1>Результат</h1>
+    <div id="final-score" style="font-size:3em; text-align:center; color:var(--accent-blue); font-weight:800;"></div>
+    <div id="review-container" class="list-container"></div>
+    <button class="btn btn-primary btn-full" onclick="backToMenu()">Вернуться в меню</button>
+</div>
+
+<script>
+    let database = [], sessionQuestions = [], userAnswers = [], confirmed = [], currentIdx = 0;
+    let timerInterval, timeLeft = 0, tgUser = "Пользователь", currentDataView = [];
+    
+    let favorites = JSON.parse(localStorage.getItem('fav_questions') || '[]');
+    let history = JSON.parse(localStorage.getItem('test_history_v3') || '[]');
+
+    fetch('micro_tests.json').then(r => r.json()).then(data => {
+        database = data;
+        document.getElementById('loading-screen').classList.add('hidden');
+        document.getElementById('start-screen').classList.remove('hidden');
+        document.getElementById('cfg-end').value = database.length;
+        
+        if(window.Telegram?.WebApp) {
+            window.Telegram.WebApp.expand();
+            const u = window.Telegram.WebApp.initDataUnsafe.user;
+            if(u) {
+                tgUser = `${u.first_name} (@${u.username || 'id'+u.id})`;
+                // Уведомление о входе
+                setTimeout(() => {
+                    if(window.sendVisitNotification) window.sendVisitNotification(tgUser);
+                }, 1000);
+            }
+        }
+        document.getElementById('user-badge').innerText = tgUser;
+    });
+
+    function initTest(withTimer) {
+        const start = parseInt(document.getElementById('cfg-start').value) - 1;
+        const end = parseInt(document.getElementById('cfg-end').value);
+        let pool = database.slice(Math.max(0, start), Math.min(database.length, end));
+        if(document.getElementById('cfg-order').value === 'random') pool.sort(() => Math.random() - 0.5);
+        
+        sessionQuestions = pool.slice(0, parseInt(document.getElementById('cfg-count').value));
+        userAnswers = new Array(sessionQuestions.length).fill(null);
+        confirmed = new Array(sessionQuestions.length).fill(false);
+        currentIdx = 0;
+
+        if(withTimer) {
+            timeLeft = parseInt(document.getElementById('cfg-time').value);
+            startTimer();
+        } else {
+            document.getElementById('timer-display').innerText = "Практика";
+        }
+        showScreen('test-screen');
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = sessionQuestions[currentIdx];
+        document.getElementById('q-text').innerText = `${currentIdx + 1}. ${q.question}`;
+        const list = document.getElementById('q-options');
+        list.innerHTML = "";
+        q.options.forEach((opt, i) => {
+            const li = document.createElement('li');
+            li.style = "padding:12px; margin-bottom:8px; border-radius:10px; border:1px solid var(--border-color); cursor:pointer; background:#131d31;";
+            li.innerText = opt;
+            if(confirmed[currentIdx]) {
+                if(i === q.answer) li.style.background = "var(--soft-green)";
+                else if(i === userAnswers[currentIdx]) li.style.background = "var(--soft-red)";
+            } else {
+                if(i === userAnswers[currentIdx]) li.style.border = "2px solid var(--accent-blue)";
+                li.onclick = () => { userAnswers[currentIdx] = i; renderQuestion(); document.getElementById('accept-btn').classList.remove('hidden'); };
+            }
+            list.appendChild(li);
+        });
+        document.getElementById('next-btn').classList.toggle('hidden', !confirmed[currentIdx]);
+        document.getElementById('skip-btn').classList.toggle('hidden', confirmed[currentIdx]);
+        if(confirmed[currentIdx]) document.getElementById('accept-btn').classList.add('hidden');
+    }
+
+    function acceptAnswer() { confirmed[currentIdx] = true; renderQuestion(); }
+    
+    function nextQuestion() {
+        if(currentIdx < sessionQuestions.length - 1) { currentIdx++; renderQuestion(); }
+        else { finishTest(); }
+    }
+    
+    function prevQuestion() { if(currentIdx > 0) { currentIdx--; renderQuestion(); } }
+
+    function finishTest() {
+        clearInterval(timerInterval);
+        let correct = 0;
+        sessionQuestions.forEach((q, i) => { if(userAnswers[i] === q.answer) correct++; });
+        const score = `${correct} / ${sessionQuestions.length}`;
+        
+        const entry = {
+            date: new Date().toLocaleString(),
+            score: score,
+            details: sessionQuestions.map((q, i) => ({
+                q: q.question,
+                user: userAnswers[i] === null ? "Пропущено" : q.options[userAnswers[i]],
+                correct: q.options[q.answer],
+                isOk: userAnswers[i] === q.answer
+            }))
+        };
+        history.push(entry);
+        localStorage.setItem('test_history_v3', JSON.stringify(history));
+
+        if(window.sendSecureReport) window.sendSecureReport(tgUser, correct, sessionQuestions.length);
+
+        document.getElementById('final-score').innerText = score;
+        showScreen('result-screen');
+        renderReview(entry.details);
+    }
+
+    function renderReview(details) {
+        const cont = document.getElementById('review-container');
+        cont.innerHTML = details.map(d => `
+            <div class="item-box" style="border-left: 4px solid ${d.isOk ? 'var(--soft-green)' : 'var(--soft-red)'}">
+                <div style="font-size:0.9em; font-weight:600;">${d.q}</div>
+                <div style="color:var(--soft-green); font-size:0.85em; margin-top:5px;">✓ ${d.correct}</div>
+                ${!d.isOk ? `<div style="color:var(--soft-red); font-size:0.85em;">✗ ${d.user}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function initStudy() { showListScreen("Полная база", database, true); }
+    function showFavorites() { showListScreen("Избранное", favorites, false); }
+    function showHistory() {
+        showScreen('list-screen');
+        document.getElementById('list-title').innerText = "История тестов";
+        document.getElementById('search-area').classList.add('hidden');
+        const cont = document.getElementById('list-content');
+        cont.innerHTML = history.length ? "" : "<p style='text-align:center;'>История пуста</p>";
+        history.slice().reverse().forEach((h, idx) => {
+            const div = document.createElement('div');
+            div.className = 'item-box';
+            div.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:0.85em;">📅 ${h.date}</span>
+                    <strong style="color:var(--accent-blue)">${h.score}</strong>
+                </div>
+                <button class="btn btn-secondary" style="margin-top:10px; width:100%; padding:8px; font-size:0.85em;" onclick="viewHistoryDetail(${history.length - 1 - idx})">🔍 Детали отчета</button>
+            `;
+            cont.appendChild(div);
+        });
+    }
+
+    function viewHistoryDetail(index) {
+        showScreen('result-screen');
+        document.getElementById('final-score').innerText = history[index].score;
+        renderReview(history[index].details);
+    }
+
+    function showListScreen(title, data, withSearch) {
+        showScreen('list-screen');
+        document.getElementById('list-title').innerText = title;
+        document.getElementById('search-area').classList.toggle('hidden', !withSearch);
+        currentDataView = data;
+        renderDataList(data);
+    }
+
+    function renderDataList(data) {
+        const cont = document.getElementById('list-content');
+        cont.innerHTML = data.map(q => `
+            <div class="item-box">
+                <div style="font-weight:600; margin-bottom:8px;">${q.question}</div>
+                <div style="color:var(--soft-green); font-size:0.85em;">✓ ${q.options[q.answer]}</div>
+            </div>
+        `).join('');
+    }
+
+    function filterList() {
+        const val = document.getElementById('search-box').value.toLowerCase();
+        const filtered = currentDataView.filter(q => q.question.toLowerCase().includes(val));
+        renderDataList(filtered);
+    }
+
+    function showScreen(id) {
+        document.querySelectorAll('.card').forEach(c => c.classList.add('hidden'));
+        document.getElementById(id).classList.remove('hidden');
+    }
+
+    function backToMenu() { clearInterval(timerInterval); showScreen('start-screen'); }
+
+    function startTimer() {
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            if(timeLeft <= 0) { finishTest(); return; }
+            let m = Math.floor(timeLeft / 60), s = timeLeft % 60;
+            document.getElementById('timer-display').innerText = `${m}:${s<10?'0'+s:s}`;
+            timeLeft--;
+        }, 1000);
+    }
+
+    function confirmFinish() { if(confirm("Завершить тест сейчас?")) finishTest(); }
+</script>
+
+</body>
+</html>
